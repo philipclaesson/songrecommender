@@ -8,7 +8,7 @@ def merge_to_ISM(totsize, stepsize, totsteps, k):
     vals = np.zeros(totsize*k)
     cp = time.time()
     for step in range(totsteps):
-        filename = 'output/arrays_%s.npz'%(step*stepsize)
+        filename = 'output/arrays_%s_%s.npz'%(k, step*stepsize)
         npzfile = np.load(filename)
         rows[step*k*stepsize:(step+1)*k*stepsize] = npzfile['arr_0']
         cols[step*k*stepsize:(step+1)*k*stepsize] = npzfile['arr_1']
@@ -19,7 +19,10 @@ def merge_to_ISM(totsize, stepsize, totsteps, k):
 
 
 
-
+    print(vals.shape)
+    print(rows.shape)
+    print(cols.shape)
+    print("Should be k vals per row, which means 100.000 k")
     M_top_k = sps.coo_matrix((vals, (rows, cols)), shape = (totsize, totsize), dtype = float).tocsr()
     print("Saving matrix...")
     outfilename = "Saved Matrixes/ISM_top_k_%s.npz"%(k)

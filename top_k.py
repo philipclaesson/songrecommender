@@ -14,30 +14,34 @@ def top_k(k, start, size):
     i = 0
     cp = time.time()
     print("Reading matrix..")
-    M = sps.load_npz("Saved Matrixes/ISM_perfect_float.npz")
+    M = sps.load_npz("Saved Matrixes/ISM_perfect_float_1000.npz")
     print("Loaded Matrix, %s sec." %(time.time()-cp))
-    check this!! is it right? print(isinstance(M, sps.csc_matrix))
+    if(isinstance(M, sps.csr_matrix)):
+        print("M is CSR")
+    else:
+        print("M is not CSR.. ")
     cp = time.time()
     index = start
     while index < start+size:
 
         track_similarities = M[index, :].todense()
 
-        # Get top K indices
-        for j in range(k):
-            top_k_idx[j] = np.argmax(track_similarities)
-            top_k_vals[j] = track_similarities[0, top_k_idx[j]]
-            track_similarities[0, top_k_idx[j]] = 0.0
-
+        # Get top K indices. Sorting the whole thing will be faster than taking the
+        # biggest val k times.
+        # k loop: O(kn) or sorting: O(n log(n)) with n = 100.000 --> logn = 5.
+        # sorting will be faster for all k greater than 5.
+        top_k_idx = np.argsort(track_similarities)[0, -k:]
+        top_k_vals = track_similarities[0, top_k_idx]
 
 
         # Create filter
-        rows[k*i:k*(i+1)] = [i]*k
+        rows[k*i:k*(i+1)] = [i]*k # i indicates row
         cols[k*i:k*(i+1)] = top_k_idx
-        top_k_vals = track_similarities[0, top_k_idx]
         vals[k*i:k*(i+1)] = top_k_vals
-        if index % 50 == 0:
+        if index % 500 == 0:
             print("Computed row %s out of %s in %s"%(index, size, (time.time()-cp)))
+            #print(top_k_idx)
+            #print(top_k_vals)
             cp = time.time()
         index += 1
         i += 1
@@ -45,4 +49,4 @@ def top_k(k, start, size):
 
     filename = 'output/arrays_%s_%s.npz'%(k, start)
     np.savez(filename, rows, cols, vals)
-    print("Saved row %s to %s in %s sec. "%(start, start+size, time.time()-starttime))
+    print("Saved row %s to %s in %s sec. "%(start, start+size-1, time.time()-starttime))
